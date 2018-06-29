@@ -1,0 +1,12 @@
+# Project dependencies
+.cache
+node_modules
+yarn-error.log
+
+# Working package versions
+yarn.lock
+package-lock.json
+
+# Build directory
+/public
+.DS_Store
