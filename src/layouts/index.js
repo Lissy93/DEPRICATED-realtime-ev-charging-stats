@@ -3,7 +3,9 @@ import PropTypes from 'prop-types'
 import Helmet from 'react-helmet'
 
 import Header from '../components/header'
+import TheMap from '../components/the-map'
 import './index.css'
+import './page-layout.css'
 
 const Layout = ({ children, data }) => (
   <div>
@@ -13,8 +15,15 @@ const Layout = ({ children, data }) => (
         { name: 'description', content: 'Sample' },
         { name: 'keywords', content: 'sample, something' },
       ]}
-    />
+    >
+      <link href='https://api.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.css' rel='stylesheet' />
+
+    </Helmet>
+
     <Header siteTitle={data.site.siteMetadata.title} />
+
+    <TheMap />
+
     <div
       style={{
         margin: '0 auto',
