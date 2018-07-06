@@ -1,21 +1,25 @@
 import React, { Component } from "react";
 import Link from 'gatsby-link';
 import * as d3 from "d3";
-import * as hexbin from "d3-hexbin";
+import * as d3Geo from "d3-geo";
+import * as d3Hexbin from "d3-hexbin";
 import * as ss from 'simple-statistics';
+import * as topojson from 'topojson';
+
 import mapboxgl from 'mapbox-gl';
 import { css } from 'glamor'
 
 const mapStyle = css({
   width: '100%',
-  height: '90%'
+  height: '90%',
+  position: 'absolute'
 });
 
 const theMapContainerStyles = css({ 
   height: '100%' 
 });
 
-
+d3.geo = d3Geo;
 
 const coffee = [
   {
@@ -76,226 +80,292 @@ const coffee = [
 
 class TheMap extends Component {
 
-    render() {
-        return (
-        <div {...theMapContainerStyles}>   
-            <div id="mapContainer" {...mapStyle}></div>
-            <div id="tooltip">
-                <svg width="100px" height="100px"></svg>
-            </div>
-        </div>
-        )
-    }
-  
-    componentWillMount() {
+  constructor() {
+    super();
+    this.map = null; // This will soon hold reference to our awesome lil map
+    this.dots = null; // And this will soon hold reference to dots on the map
+    this.svg = null; // You guessed it, will hold ref to the SVG dom elem
+  }
 
-    }
+  render() {
+      return (
+      <div {...theMapContainerStyles}>   
+          <div id="mapContainer" {...mapStyle}></div>
+          <div id="tooltip">
+              <svg width="100px" height="100px"></svg>
+          </div>
+      </div>
+      )
+  }
 
   componentDidMount =  () => {
-    mapboxgl.accessToken = 'pk.eyJ1IjoiYXN5a2VzIiwiYSI6ImNqajE3cTJkZDBubGMzcW4zZDIydmxnOHcifQ._-KnhpPwutwQ6ZQ3kVa4KQ';
+    this.renderTheMap()
+    this.setUpD3Viz(this.vzIsSetUp);
+  }
 
-    var map = new mapboxgl.Map({
+  /**
+   * Called once the vis is setup
+   * Calls to other functions that will 
+   * render data, and attach listeners
+   */
+  vzIsSetUp = () => {
+    this.renderTheViz()
+    this.attatchRerenderListeners();
+  }
+
+  /**
+   * Specify's the intial properties of the map, then creates it
+   */
+  renderTheMap() {
+    mapboxgl.accessToken = 'pk.eyJ1IjoiYXN5a2VzIiwiYSI6ImNqajE3cTJkZDBubGMzcW4zZDIydmxnOHcifQ._-KnhpPwutwQ6ZQ3kVa4KQ';    
+
+    this.map = new mapboxgl.Map({
       container: 'mapContainer',
       style: 'mapbox://styles/mapbox/light-v9',
-      center: [-74.50, 40],
+      center: [0, 51.5],
       zoom: 9,
       accessToken: 'pk.eyJ1IjoiYXN5a2VzIiwiYSI6ImNqajE3cTJkZDBubGMzcW4zZDIydmxnOHcifQ._-KnhpPwutwQ6ZQ3kVa4KQ'
     });
-
-    // this.renderStuff();
   }
 
-  // renderStuff = () => {
-  //       //**********************************************************************************
-  //       //********  LEAFLET HEXBIN LAYER CLASS *********************************************
-  //       //**********************************************************************************
-  //       L.HexbinLayer = L.Class.extend({
-  //         includes: L.Mixin.Events,
-  //         initialize: function (rawData, options) {
-  //           this.levels = {};
-  //           this.layout = d3.hexbin().radius(10);
-  //           this.rscale = d3.scale.sqrt().range([0, 10]).clamp(true);
-  //           this.rwData = rawData;
-  //           this.config = options;
-  //         },
-  //         project: function(x) {
-  //           var point = this.map.latLngToLayerPoint([x[1], x[0]]);
-  //           return [point.x, point.y];
-  //         },
-  //         getBounds: function(d) {
-  //           var b = d3.geo.bounds(d)
-  //           return L.bounds(this.project([b[0][0], b[1][1]]), this.project([b[1][0], b[0][1]]));
-  //         },
-  //         update: function () {
-  //           var pad = 100, xy = this.getBounds(this.rwData), zoom = this.map.getZoom();
+  /**
+   * TODO - delete this, we'll have real data soon :)
+   */
+  fakeData() {
+    return {
+      "type": "Topology",
+      "objects": {
+        "london_stations":{
+          "type": "GeometryCollection",
+            "crs": {
+              "type": "name",
+              "properties": {
+                "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+              }
+            },
+            "geometries": [
+              {
+                "type": "Point",
+                "properties": {
+                  "id": "940GZZDLALL",
+                  "lines": [
+                    {
+                      "name": "DLR"
+                    }
+                  ]
+                },
+                "coordinates": [
+                  7363,
+                  4635
+                ]
+              },
+              {
+                "type": "Point",
+                "properties": {
+                  "id": "940GZZDLBEC",
+                  "lines": [
+                    {
+                      "name": "DLR"
+                    }
+                  ]
+                },
+                "coordinates": [
+                  7931,
+                  4733
+                ]
+              },
+              {
+                "type": "Point",
+                "properties": {
+                  "id": "940GZZDLBLA",
+                  "lines": [
+                    {
+                      "name": "DLR"
+                    }
+                  ]
+                },
+                "coordinates": [
+                  7408,
+                  4559
+                ]
+              },
+              {
+                "type": "Point",
+                "properties": {
+                  "id": "940GZZDLBOW",
+                  "lines": [
+                    {
+                      "name": "DLR"
+                    }
+                  ]
+                },
+                "coordinates": [
+                  7303,
+                  5104
+                ]
+              },
+              {
+                "type": "Point",
+                "properties": {
+                  "id": "940GZZDLBPK",
+                  "lines": [
+                    {
+                      "name": "DLR"
+                    }
+                  ]
+                },
+                "coordinates": [
+                  7885,
+                  4580
+                ]
+              },
+              {
+                "type": "Point",
+                "properties": {
+                  "id": "940GZZDLCAN",
+                  "lines": [
+                    {
+                      "name": "DLR"
+                    }
+                  ]
+                },
+                "coordinates": [
+                  7303,
+                  4482
+                ]
+              },
+              {
+                "type": "Point",
+                "properties": {
+                  "id": "940GZZLUCGT",
+                  "lines": [
+                    {
+                      "name": "Jubilee"
+                    },
+                    {
+                      "name": "DLR"
+                    }
+                  ]
+                },
+                "coordinates": [
+                  7526,
+                  4727
+                ]
+              },
+              {
+                "type": "Point",
+                "properties": {
+                  "id": "940GZZDLCLA",
+                  "lines": [
+                    {
+                      "name": "DLR"
+                    }
+                  ]
+                },
+                "coordinates": [
+                  7352,
+                  4225
+                ]
+              },
+            ]
+        }
+      },
+      "arcs": [
+        
+      ],
+      "transform": {
+        "scale": [
+          0.00013036513651365137,
+          0.00003629303263344896
+        ],
+        "translate": [
+          -0.9729138,
+          51.3424955666981
+        ]
+      }
+    };
+  }
 
-  //           this.container
-  //             .attr("width", xy.getSize().x + (2 * pad))
-  //             .attr("height", xy.getSize().y + (2 * pad))
-  //             .style("margin-left", (xy.min.x - pad) + "px")
-  //             .style("margin-top", (xy.min.y - pad) + "px");
+  /**
+   * Calculate the scale given mapbox state (derived from viewport-mercator-project's code) 
+   * to define a d3 projection
+   */
+  getMercatorProjection = () => {
+    const bbox = document.body.getBoundingClientRect();
+    const center = this.map.getCenter();
+    const zoom = this.map.getZoom();
+    const scale = (512) * 0.5 / Math.PI * Math.pow(2, zoom); // 512 is hard-coded tile size
+    const d3projection = d3.geo.geoMercator()
+      .center([center.lng, center.lat])
+      .translate([bbox.width/2, bbox.height/2])
+      .scale(scale);
+    return d3projection;
+  }
 
-  //           if (!(zoom in this.levels)) {
-  //               this.levels[zoom] = this.container.append("g").attr("class", "zoom-" + zoom);
-  //               this.genHexagons(this.levels[zoom]);
-  //               this.levels[zoom].attr("transform", "translate(" + -(xy.min.x - pad) + "," + -(xy.min.y - pad) + ")");
-  //           }
-  //           if (this.curLevel) {
-  //             this.curLevel.style("display", "none");
-  //           }
-  //           this.curLevel = this.levels[zoom];
-  //           this.curLevel.style("display", "inline");
-  //         },
-  //         genHexagons: function (container) {
-  //           var data = this.rwData.features.map(function (d) {
-  //             var coords = this.project(d.geometry.coordinates)
-  //             return [coords[0],coords[1], d.properties];
-  //           }, this);
+  /**
+   * Renders content based on new data onto the svg layer
+   * Note: the viz must already have been set up. Call setUpD3Viz() first. 
+   */
+  renderTheViz = () => {
 
-  //           var bins = this.layout(data);
-  //           var hexagons = container.selectAll(".hexagon").data(bins);
+    const d3Projection = this.getMercatorProjection();
+    const path = d3.geo.geoPath()
+    path.projection(d3Projection)
 
-  //           var counts = [];
-  //           bins.map(function (elem) { counts.push(elem.length) });
-  //           this.rscale.domain([0, (ss.mean(counts) + (ss.standard_deviation(counts) * 3))]);
+    const data = this.fakeData();
+    const points = topojson.feature(data, data.objects.london_stations)
+    
+    this.dots = this.svg
+      .selectAll("circle.dot")
+      .data(points.features)
 
-  //           var path = hexagons.enter().append("path").attr("class", "hexagon");
-  //           this.config.style.call(this, path);
+    this.dots.enter()
+    .append("circle")
+    .classed("dot", true)
+    .attr("r", 1)
+    .attr("style", "fill: #0082a3; fill-opacity: 0.6; stroke: #004d60; stroke-width: 1")
+    .transition()
+    .duration(1000)
+    .attr("r", 6)
+    
+    this.dots
+    .attr("cx",  (d) => { 
+        var x = d3Projection(d.geometry.coordinates)[0];
+        return x
+      })
+      .attr("cy", (d) => { 
+        var y = d3Projection(d.geometry.coordinates)[1];
+        return y
+      })
+  }
 
-  //           that = this;
-  //           hexagons
-  //             .attr("d", function(d) { return that.layout.hexagon(that.rscale(d.length)); })
-  //             .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
-  //             .on("mouseover", function (d) { 
-  //               var s=0, k=0;
-  //               d.map(function(e){
-  //                 if (e.length === 3) e[2].group === 1 ? ++k : ++s;
-  //               });
-  //               that.config.mouse.call(this, [s,k]);
-  //               d3.select("#tooltip")
-  //                 .style("visibility", "visible")
-  //                 .style("top", function () { return (d3.event.pageY - 130)+"px"})
-  //                 .style("left", function () { return (d3.event.pageX - 130)+"px";})
-  //             })
-  //             .on("mouseout", function (d) { d3.select("#tooltip").style("visibility", "hidden") });
-  //         },
-  //         addTo: function (map) {
-  //           map.addLayer(this);
-  //           return this;
-  //         },
-  //         onAdd: function (map) {
-  //           this.map = map;
-  //           var overlayPane = this.map.getPanes().overlayPane;
+  /**
+   * Called once, sets everything up, so that the viz can be rendered
+   */
 
-  //           if (!this.container || overlayPane.empty) {
-  //               this.container = d3.select(overlayPane)
-  //                   .append('svg')
-  //                       .attr("id", "hex-svg")
-  //                       .attr('class', 'leaflet-layer leaflet-zoom-hide');
-  //           }
-  //           map.on({ 'moveend': this.update }, this);
-  //           this.update();
-  //         }
-  //       });
+  setUpD3Viz = (doneCb) => {
+    // Setup our svg layer to manipulate with d3
+    var container = this.map.getCanvasContainer()
+    this.svg = d3.select(container)
+    .append("svg")
+    .attr("class", "map-layer-svg")
+   
+    // Callback will render the data, and attach the listeners
+    doneCb();
+  }
 
-  //       L.hexbinLayer = function (data, styleFunction) {
-  //         return new L.HexbinLayer(data, styleFunction);
-  //       };
-  //       //**********************************************************************************
-  //       //********  IMPORT DATA AND REFORMAT ***********************************************
-  //       //**********************************************************************************
-  //         console.log(coffee);
-
-  //         function reformat (array) {
-  //           var data = [];
-  //           array.map(function (d){
-  //             data.push({
-  //               properties: {
-  //                 group: +d.group,
-  //                 city: d.city,
-  //                 state: d.state,
-  //                 store: d.storenumber
-  //               }, 
-  //               type: "Feature", 
-  //               geometry: {
-  //                 coordinates:[+d.longitude,+d.latitude], 
-  //                 type:"Point"
-  //               }
-  //             });
-  //           });
-  //           return data;
-  //         }
-  //         var geoData = { type: "FeatureCollection", features: reformat(coffee) };
-  //         //**********************************************************************************
-  //         //********  CREATE LEAFLET MAP *****************************************************
-  //         //**********************************************************************************
-  //         var cscale = d3.scaleLinear().domain([0,1]).range(["#00FF00","#FFA500"]);
-
-  //         // PLEASE DO NOT USE MY MAP ID :)  YOU CAN GET YOUR OWN FOR FREE AT MAPBOX.COM
-  //         var leafletMap = L.mapbox.map('mapContainer', 'pk.eyJ1IjoiYXN5a2VzIiwiYSI6ImNqajE3cTJkZDBubGMzcW4zZDIydmxnOHcifQ._-KnhpPwutwQ6ZQ3kVa4KQ')
-  //             .setView([40.7, -73.8], 11);
-
-  //             mapboxgl.accessToken = 'pk.eyJ1IjoiYXN5a2VzIiwiYSI6ImNqajE3cTJkZDBubGMzcW4zZDIydmxnOHcifQ._-KnhpPwutwQ6ZQ3kVa4KQ';
-  //               var map = new mapboxgl.Map({
-  //               container: 'mapContainer',
-  //               style: 'mapbox://styles/mapbox/streets-v10'
-  //               });
-
-  //         //**********************************************************************************
-  //         //********  ADD HEXBIN LAYER TO MAP AND DEFINE HEXBIN STYLE FUNCTION ***************
-  //         //**********************************************************************************
-  //         var hexLayer = L.hexbinLayer(geoData, { 
-  //                           style: hexbinStyle,
-  //                           mouse: makePie
-  //                         }).addTo(leafletMap);
-
-  //         function hexbinStyle(hexagons) {
-  //           hexagons
-  //             .attr("stroke", "black")
-  //             .attr("fill", function (d) {
-  //               var values = d.map(function (elem) {
-  //                 return elem[2].group;
-  //               })
-  //               var avg = d3.mean(d, function(d) { return +d[2].group; })
-  //               return cscale(avg);
-  //             });
-  //         }
-
-  //         //**********************************************************************************
-  //         //********  PIE CHART ROLL-OVER ****************************************************
-  //         //**********************************************************************************
-  //         function makePie (data) {
-
-  //           d3.select("#tooltip").selectAll(".arc").remove()
-  //           d3.select("#tooltip").selectAll(".pie").remove()
-
-  //           var arc = d3.svg.arc()
-  //               .outerRadius(45)
-  //               .innerRadius(10);
-
-  //           var pie = d3.layout.pie()
-  //               .value(function(d) { return d; });
-
-  //           var svg = d3.select("#tooltip").select("svg")
-  //                       .append("g")
-  //                         .attr("class", "pie")
-  //                         .attr("transform", "translate(50,50)");
-
-  //           var g = svg.selectAll(".arc")
-  //                     .data(pie(data))
-  //                     .enter().append("g")
-  //                       .attr("class", "arc");
-
-  //               g.append("path")
-  //                 .attr("d", arc)
-  //                 .style("fill", function(d, i) { return i === 1 ? 'orange':'green'; });
-
-  //               g.append("text")
-  //                   .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
-  //                   .style("text-anchor", "middle")
-  //                   .text(function (d) { return d.value === 0 ? "" : d.value; });
-  //         }
-  // }
+  /**
+   * Listens for changes in the page or map, 
+   * and calls to re-renders the data points
+   */
+  attatchRerenderListeners = () => {
+    this.map.on("viewreset", () => {
+      this.renderTheViz()
+    })
+    this.map.on("move", () => {
+      this.renderTheViz()
+    })
+  }
 
 }
 

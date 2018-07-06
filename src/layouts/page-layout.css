@@ -1,3 +1,9 @@
 html, body, #___gatsby, #___gatsby div[data-reactroot]{
     height: 100%;
 }
+
+svg.map-layer-svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
