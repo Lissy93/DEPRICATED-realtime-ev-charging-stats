@@ -2085,15 +2085,6 @@ class TheMap extends Component {
    * to define a d3 projection
    */
   getMercatorProjection = (d) => {
-    // const bbox = document.body.getBoundingClientRect();
-    // const center = this.map.getCenter();
-    // const zoom = this.map.getZoom();
-    // const scale = (512) * 0.5 / Math.PI * Math.pow(2, zoom); // 512 is hard-coded tile size
-    // const d3projection = d3.geo.geoMercator()
-    //   .center([center.lng, center.lat])
-    //   .translate([bbox.width/2, bbox.height/2])
-    //   .scale(scale);
-    // return d3projection;
     return this.map.project(this.getLL(d));
   }
 
@@ -2103,12 +2094,7 @@ class TheMap extends Component {
    */
   renderTheViz = () => {
 
-    // const d3Projection = this.getMercatorProjection();
-    // const path = d3.geo.geoPath()
-    // path.projection(d3Projection)
-
     const data = this.fakeData();
-    // const points = topojson.feature(data, data.objects.london_stations)
     const points = data;
     
     this.dots = this.svg
