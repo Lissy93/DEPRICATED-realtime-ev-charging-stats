@@ -16,7 +16,7 @@ const Layout = ({ children, data }) => (
         { name: 'keywords', content: 'sample, something' },
       ]}
     >
-      <link href='https://api.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.css' rel='stylesheet' />
+    <link href='https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.css' rel='stylesheet' />
 
     </Helmet>
 
